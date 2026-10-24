@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Odliadur</title>
+<meta name="description" content="Welsh end-rhyme finder: type an ending and see the words that share it.">
+<style>
+  :root {
+    --bg: #fbfaf7; --fg: #1d2420; --muted: #5d6a63; --line: #d9ddd6;
+    --card: #ffffff; --accent: #1f6b4a; --accent-fg: #ffffff; --chip: #eef3ee; --name: #7a4b1f;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #151a17; --fg: #e8ece8; --muted: #9aa8a0; --line: #2c3631;
+      --card: #1c231f; --accent: #5fbf92; --accent-fg: #0d1511; --chip: #232d27; --name: #d9a066;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg);
+         font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 20px 16px 48px; }
+  h1 { font-size: 1.6rem; margin: 0 0 2px; }
+  .sub { color: var(--muted); margin: 0 0 18px; }
+  label.field { display: block; font-weight: 600; margin-bottom: 6px; }
+  .row { display: flex; gap: 8px; }
+  input[type=text] { flex: 1; min-width: 0; font-size: 1.25rem; padding: 10px 12px;
+        border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--fg); }
+  input[type=text]:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  button { font: inherit; cursor: pointer; }
+  .go { padding: 10px 16px; border: 0; border-radius: 10px; background: var(--accent); color: var(--accent-fg); font-weight: 600; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 4px; }
+  .chip { padding: 5px 12px; border: 1px solid var(--line); background: var(--chip); color: var(--fg); border-radius: 999px; }
+  .opts { display: grid; gap: 6px; margin: 14px 0; color: var(--muted); font-size: .95rem; }
+  .opts label { display: flex; gap: 8px; align-items: flex-start; }
+  .opts select { font: inherit; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--card); color: var(--fg); }
+  .note { background: var(--chip); border-left: 3px solid var(--accent); padding: 8px 12px; border-radius: 6px; font-size: .92rem; margin: 10px 0; }
+  .count { font-weight: 600; margin: 16px 0 8px; }
+  ul.words { list-style: none; margin: 0; padding: 0; display: grid;
+             grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 4px 12px; }
+  ul.words button { width: 100%; text-align: left; padding: 6px 8px; border: 0; background: transparent; color: var(--fg);
+                    border-radius: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  ul.words button:hover, ul.words button:focus-visible { background: var(--chip); outline: none; }
+  ul.words button.sel { background: var(--accent); color: var(--accent-fg); }
+  .name { color: var(--name); font-style: italic; }
+  .more { margin: 12px 0; padding: 8px 14px; border: 1px solid var(--line); background: var(--card); color: var(--fg); border-radius: 8px; }
+  #detail { position: sticky; bottom: 0; background: var(--card); border: 1px solid var(--line); border-radius: 12px 12px 0 0;
+            padding: 12px 14px; margin-top: 16px; box-shadow: 0 -4px 16px rgba(0,0,0,.08); display: none; max-height: 48vh; overflow: auto; }
+  #detail h2 { margin: 0 0 4px; font-size: 1.2rem; display: flex; justify-content: space-between; gap: 8px; }
+  #detail .close { border: 0; background: transparent; color: var(--muted); font-size: 1.3rem; line-height: 1; }
+  #detail .pos { color: var(--muted); font-size: .85rem; text-transform: uppercase; letter-spacing: .04em; margin-top: 8px; }
+  #detail ol { margin: 4px 0 8px 20px; padding: 0; }
+  #detail .links a { color: var(--accent); margin-right: 14px; }
+  footer { color: var(--muted); font-size: .85rem; margin-top: 32px; border-top: 1px solid var(--line); padding-top: 12px; }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Odliadur</h1>
+  <p class="sub">Welsh end-rhyme finder. Type an ending to see the words that share it.</p>
+
+  <label class="field" for="ending">Ending</label>
+  <div class="row">
+    <input id="ending" type="text" inputmode="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="e.g. ydd">
+    <button class="go" id="go" type="button">Find</button>
+  </div>
+  <div class="chips" id="chips" aria-label="Quick endings"></div>
+
+  <div class="opts">
+    <label><input type="checkbox" id="optAccents" checked> Ignore accents (so <em>ydd</em> also finds <em>gwŷdd</em>)</label>
+    <label><input type="checkbox" id="optVowel" checked> When the ending is just <em>i</em> or <em>u</em>, skip words where it forms a diphthong (typing <em>u</em> skips <em>-au</em> and <em>-eu</em>; typing <em>i</em> skips <em>-ai</em>, <em>-ei</em> and <em>-oi</em>)</label>
+    <label><input type="checkbox" id="optNames" checked> Include names (capitalised words, shown in italics)</label>
+    <label>Sort by
+      <select id="optSort">
+        <option value="az">alphabetical</option>
+        <option value="short">shortest first</option>
+        <option value="long">longest first</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="note" id="wyNote" hidden>
+    Welsh has two different <em>wy</em> sounds that do not rhyme with each other (lleddf, as in <em>mwyn</em>, and talgron, as in <em>gwyn</em>).
+    This version lists every word that ends in the letters you typed, so it does not separate them yet.
+  </div>
+
+  <div class="count" id="count" aria-live="polite"></div>
+  <ul class="words" id="list"></ul>
+  <button class="more" id="more" hidden>Show more</button>
+
+  <section id="detail" aria-live="polite"></section>
+
+  <footer>
+    <p>Word list: the Welsh spelling dictionary from Bangor University's Language Technologies Unit (Uned Technolegau Iaith) and Troi,
+    licensed under the <a href="https://www.gnu.org/licenses/lgpl-3.0.html" target="_blank" rel="noopener">GNU LGPL v3 or later</a>.
+    Source: <a href="https://github.com/techiaith/hunspell-cy" target="_blank" rel="noopener">techiaith/hunspell-cy</a>.
+    Plural forms were added by adding the regular endings that dictionary defines.</p>
+    <p>Meanings: fetched live from <a href="https://en.wiktionary.org" target="_blank" rel="noopener">Wiktionary</a>, available under
+    <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA</a>. Many rare words have no entry there;
+    for those, try Geiriadur Prifysgol Cymru (link under each word).</p>
+    <p>This is a personal tool inspired by the book <em>Yr Odliadur</em>. It contains no text from that book, and it is not affiliated with its authors or publisher.
+    A list of words that share an ending is not the same as a list of words that rhyme in strict-metre poetry, so check against a printed odliadur for important work.</p>
+  </footer>
+</main>
+
+<script>
+(function () {
+  var PAGE = 400;
+  var words = [], norm = [], isName = [];
+  var results = [], shown = 0, selected = null;
+  var $ = function (id) { return document.getElementById(id); };
+
+  function strip(s) { return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+  function lower(s) { return s.normalize('NFC').toLowerCase(); }
+
+  fetch('words.json').then(function (r) { return r.json(); }).then(function (data) {
+    words = data;
+    norm = new Array(words.length);
+    isName = new Array(words.length);
+    for (var i = 0; i < words.length; i++) {
+      norm[i] = null;
+      var c = words[i].charAt(0);
+      isName[i] = c !== c.toLowerCase();
+    }
+    $('count').textContent = words.length.toLocaleString() + ' words loaded. Type an ending above.';
+    var q = new URLSearchParams(location.search).get('e');
+    if (q) { $('ending').value = q; search(); }
+  }).catch(function () {
+    $('count').textContent = 'Could not load the word list (words.json).';
+  });
+
+  var CHIPS = ['ydd', 'y', 'i', 'u', 'wy', 'wyth', 'au', 'ion', 'yn', 'on'];
+  CHIPS.forEach(function (c) {
+    var b = document.createElement('button');
+    b.className = 'chip'; b.type = 'button'; b.textContent = '-' + c;
+    b.addEventListener('click', function () { $('ending').value = c; search(); });
+    $('chips').appendChild(b);
+  });
+
+  function search() {
+    var raw = $('ending').value.trim().replace(/^-+/, '');
+    var ignoreAccents = $('optAccents').checked;
+    var wholeVowel = $('optVowel').checked;
+    var withNames = $('optNames').checked;
+    var sort = $('optSort').value;
+    selected = null; closeDetail();
+    $('wyNote').hidden = !/^wy/i.test(raw);
+    if (!raw) { $('count').textContent = words.length ? words.length.toLocaleString() + ' words loaded. Type an ending above.' : ''; $('list').innerHTML = ''; $('more').hidden = true; return; }
+    var key = ignoreAccents ? strip(raw) : lower(raw);
+    var blockers = key === 'i' ? 'aeo' : key === 'u' ? 'aei' : '';
+    var out = [];
+    for (var i = 0; i < words.length; i++) {
+      if (!withNames && isName[i]) continue;
+      var w = words[i];
+      var t = ignoreAccents ? strip(w) : lower(w);
+      if (t.length < key.length || t.slice(t.length - key.length) !== key) continue;
+      if (wholeVowel && blockers && t.length > 1) {
+        var prev = t.charAt(t.length - 2);
+        if (blockers.indexOf(prev) !== -1) continue;
+      }
+      out.push(w);
+    }
+    if (sort === 'short') out.sort(function (a, b) { return a.length - b.length || a.localeCompare(b, 'cy'); });
+    else if (sort === 'long') out.sort(function (a, b) { return b.length - a.length || a.localeCompare(b, 'cy'); });
+    results = out; shown = 0;
+    $('list').innerHTML = '';
+    $('count').textContent = out.length.toLocaleString() + ' word' + (out.length === 1 ? '' : 's') + ' ending in -' + raw;
+    render();
+  }
+
+  function render() {
+    var list = $('list');
+    var end = Math.min(results.length, shown + PAGE);
+    var frag = document.createDocumentFragment();
+    for (var i = shown; i < end; i++) {
+      var li = document.createElement('li');
+      var b = document.createElement('button');
+      b.type = 'button'; b.textContent = results[i]; b.dataset.w = results[i];
+      var c = results[i].charAt(0);
+      if (c !== c.toLowerCase()) b.className = 'name';
+      li.appendChild(b); frag.appendChild(li);
+    }
+    list.appendChild(frag);
+    shown = end;
+    $('more').hidden = shown >= results.length;
+    $('more').textContent = 'Show more (' + (results.length - shown).toLocaleString() + ' left)';
+  }
+
+  $('list').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    var prev = $('list').querySelector('button.sel'); if (prev) prev.classList.remove('sel');
+    b.classList.add('sel');
+    openDetail(b.dataset.w);
+  });
+
+  function closeDetail() { $('detail').style.display = 'none'; $('detail').innerHTML = ''; }
+
+  function openDetail(word) {
+    selected = word;
+    var d = $('detail');
+    d.style.display = 'block';
+    var enc = encodeURIComponent(word);
+    d.innerHTML = '<h2><span></span><button class="close" type="button" aria-label="Close">&times;</button></h2>' +
+      '<div id="defs">Looking up meaning&hellip;</div>' +
+      '<div class="links"><a href="https://en.wiktionary.org/wiki/' + enc + '#Welsh" target="_blank" rel="noopener">Wiktionary</a>' +
+      '<a href="https://geiriadur.ac.uk/gpc/gpc.html?' + enc + '" target="_blank" rel="noopener">GPC (Geiriadur Prifysgol Cymru)</a></div>';
+    d.querySelector('h2 span').textContent = word;
+    d.querySelector('.close').addEventListener('click', function () {
+      closeDetail();
+      var s = $('list').querySelector('button.sel'); if (s) s.classList.remove('sel');
+    });
+    lookup(word).then(function (html) {
+      if (selected !== word) return;
+      var box = $('defs'); if (box) box.replaceChildren.apply(box, html);
+    });
+  }
+
+  function textOf(htmlString) {
+    var doc = new DOMParser().parseFromString(htmlString, 'text/html');
+    return (doc.body.textContent || '').trim();
+  }
+
+  function lookup(word) {
+    var url = 'https://en.wiktionary.org/api/rest_v1/page/definition/' + encodeURIComponent(word);
+    return fetch(url, { headers: { 'Accept': 'application/json' } }).then(function (r) {
+      if (!r.ok) throw new Error('none');
+      return r.json();
+    }).then(function (data) {
+      var entries = data.cy || [];
+      if (!entries.length) throw new Error('none');
+      var nodes = [];
+      entries.forEach(function (en) {
+        var pos = document.createElement('div'); pos.className = 'pos'; pos.textContent = en.partOfSpeech || '';
+        var ol = document.createElement('ol');
+        (en.definitions || []).slice(0, 6).forEach(function (df) {
+          var t = textOf(df.definition || ''); if (!t) return;
+          var li = document.createElement('li'); li.textContent = t; ol.appendChild(li);
+        });
+        nodes.push(pos, ol);
+      });
+      return nodes;
+    }).catch(function () {
+      var p = document.createElement('p');
+      p.textContent = 'No Welsh entry found on Wiktionary (or it could not be reached). Try Geiriadur Prifysgol Cymru below.';
+      return [p];
+    });
+  }
+
+  $('go').addEventListener('click', search);
+  $('ending').addEventListener('keydown', function (e) { if (e.key === 'Enter') search(); });
+  ['optAccents', 'optVowel', 'optNames', 'optSort'].forEach(function (id) { $(id).addEventListener('change', search); });
+  $('more').addEventListener('click', render);
+})();
+</script>
+</body>
+</html>
