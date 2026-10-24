@@ -85,7 +85,7 @@
     <input id="ending" type="text" inputmode="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="e.g. ydd">
     <button class="go" id="go" type="button">Find</button>
   </div>
-  <p class="chiphint" id="chiphint">Endings in alphabetical order. Use the arrows to move along; searching centres the list on your ending.</p>
+  <p class="chiphint" id="chiphint">One-syllable endings in alphabetical order. Use the arrows to move along; searching centres the list on your ending.</p>
   <div class="chips" id="chips" aria-label="Endings in alphabetical order"></div>
 
   <div class="opts">
@@ -129,7 +129,7 @@
     endorsed by the authors or publisher. It does not reproduce the book, and its word list differs from the book's. A list of words that share an ending is not the
     same as a list of words that rhyme in strict-metre poetry, so for the authoritative guide to rhyme, including the rules for <em>wy</em>, <em>y</em>, <em>u</em> and
     <em>i</em>, use the book.</p>
-    <p class="ver">Version 24 Oct 2026, 16:04 (UK time)</p>
+    <p class="ver">Version 24 Oct 2026, 16:13 (UK time)</p>
   </footer>
 </main>
 
@@ -157,19 +157,23 @@
     norm = new Array(words.length);
     isName = new Array(words.length);
     var counts = Object.create(null);
+    var rimeRe = /[aeiouwy]+[^aeiouwy]*$/;
     for (var i = 0; i < words.length; i++) {
       norm[i] = null;
       var c = words[i].charAt(0);
       isName[i] = c !== c.toLowerCase();
-      var t = strip(words[i]);
-      for (var L = 1; L <= 4 && L <= t.length; L++) {
-        var e = t.slice(t.length - L);
-        counts[e] = (counts[e] || 0) + 1;
-      }
+      var m = rimeRe.exec(strip(words[i]));
+      if (!m) continue;
+      var r = m[0];
+      if (/^w[aeiou]/.test(r)) r = r.slice(1);   // w before another vowel (gwaith, gwal) is a consonant, not part of the rhyme
+      counts[r] = (counts[r] || 0) + 1;
     }
-    ENDS = Object.keys(counts).filter(function (e) { return counts[e] >= 30 && /^[a-z]+$/.test(e); })
-      .sort(function (x, y) { return x < y ? -1 : x > y ? 1 : 0; });
-    ENDCOUNT = counts;
+    // An "ending" is the rhyming part of the last syllable: its vowel (or diphthong) plus any consonants after it.
+    var DIPH = ' ae ai au aw ei eu ew oe oi ow uw yw iw ia ie io iu wy iai iau ';
+    ENDS = Object.keys(counts).filter(function (e) {
+      var run = /^[aeiouwy]+/.exec(e)[0], tail = e.slice(run.length);
+      return counts[e] >= 15 && /^[a-z]+$/.test(e) && tail.length <= 3 && (run.length === 1 || DIPH.indexOf(' ' + run + ' ') !== -1);
+    }).sort(function (x, y) { return x < y ? -1 : x > y ? 1 : 0; });
     drawChips('');
     $('count').textContent = words.length.toLocaleString() + ' words loaded. Type an ending above.';
     var q = new URLSearchParams(location.search).get('e');
@@ -177,7 +181,15 @@
   }).catch(function () {
     $('count').textContent = 'Could not load the word list (words.json).';
   });
-  var ENDCOUNT = {};
+  var endCache = {};
+  function endCount(e) {
+    if (endCache[e] === undefined) {
+      var n = 0;
+      for (var i = 0; i < words.length; i++) { if (strip(words[i]).slice(-e.length) === e) n++; }
+      endCache[e] = n;
+    }
+    return endCache[e];
+  }
 
   // Alphabetical strip of endings, centred on the ending being searched.
   function drawChips(key) {
@@ -203,7 +215,7 @@
       (function (e) {
         var b = document.createElement('button');
         b.type = 'button'; b.className = 'chip' + (e === key ? ' cur' : ''); b.textContent = '-' + e;
-        if (ENDCOUNT[e]) b.title = ENDCOUNT[e].toLocaleString() + ' words';
+        b.title = endCount(e).toLocaleString() + ' words';
         b.addEventListener('click', function () { $('ending').value = e; search(); });
         box.appendChild(b);
       })(view[i]);
