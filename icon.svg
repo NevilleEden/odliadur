@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3b7d58"/>
+      <stop offset="1" stop-color="#1c4730"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <!-- two linked rings: two words that share a sound -->
+  <circle cx="420" cy="320" r="118" fill="none" stroke="#f6f1e4" stroke-width="30" opacity="0.95"/>
+  <circle cx="604" cy="320" r="118" fill="none" stroke="#f6f1e4" stroke-width="30" opacity="0.95"/>
+  <!-- the shared part -->
+  <path d="M512 217 A118 118 0 0 1 512 423 A118 118 0 0 1 512 217 Z" fill="#c8102e"/>
+  <text x="512" y="745" text-anchor="middle" font-family="'DejaVu Serif','Georgia','Times New Roman',serif" font-weight="700" font-size="300" fill="#f6f1e4">-ydd</text>
+  <rect x="262" y="835" width="500" height="26" rx="13" fill="#c8102e"/>
+</svg>

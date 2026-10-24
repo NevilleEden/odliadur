@@ -35,3 +35,8 @@
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+
+----
+Additional data files in this site:
+- meanings.json: adapted from Welsh entries in Wiktionary (CC BY-SA 4.0), extracted with kaikki.org.
+- meanings-extra.json: derived from apertium-cy-en (GNU GPL v2), see LICENSE-GPL-2.0.txt.

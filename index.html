@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Odliadur</title>
 <meta name="description" content="Welsh end-rhyme finder: type an ending and see the words that share it.">
+<meta name="theme-color" content="#1f6b4a">
+<meta name="apple-mobile-web-app-title" content="Odliadur">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <style>
   :root {
     --bg: #fbfaf7; --fg: #1d2420; --muted: #5d6a63; --line: #d9ddd6;
@@ -30,7 +35,22 @@
   button { font: inherit; cursor: pointer; }
   .go { padding: 10px 16px; border: 0; border-radius: 10px; background: var(--accent); color: var(--accent-fg); font-weight: 600; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 4px; }
+  .chips { align-items: center; }
   .chip { padding: 5px 12px; border: 1px solid var(--line); background: var(--chip); color: var(--fg); border-radius: 999px; }
+  .chip.cur { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600; }
+  .chip.arrow { background: transparent; color: var(--accent); font-weight: 600; }
+  .chip.arrow:disabled { opacity: .3; cursor: default; }
+  .chiphint { color: var(--muted); font-size: .8rem; margin: 0 0 2px; }
+  ul.words.mean { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+  ul.words button .w { font-weight: 600; }
+  ul.words button .l { color: var(--muted); font-size: .75rem; margin: 0 4px 0 8px; }
+  ul.words button .g { color: var(--muted); }
+  ul.words button.sel .l, ul.words button.sel .g { color: inherit; opacity: .9; }
+  #detail .own { margin: 6px 0 4px; }
+  #detail .own .lab { color: var(--muted); font-size: .8rem; }
+  #detail .src { color: var(--muted); font-size: .8rem; margin: 2px 0 8px; }
+  #detail .full { margin: 4px 0 8px; padding: 5px 10px; border: 1px solid var(--line); background: var(--chip); color: var(--fg); border-radius: 8px; }
+  .ver { margin-top: 10px; }
   .opts { display: grid; gap: 6px; margin: 14px 0; color: var(--muted); font-size: .95rem; }
   .opts label { display: flex; gap: 8px; align-items: flex-start; }
   .opts select { font: inherit; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--card); color: var(--fg); }
@@ -65,12 +85,14 @@
     <input id="ending" type="text" inputmode="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="e.g. ydd">
     <button class="go" id="go" type="button">Find</button>
   </div>
-  <div class="chips" id="chips" aria-label="Quick endings"></div>
+  <p class="chiphint" id="chiphint">Endings in alphabetical order. Use the arrows to move along; searching centres the list on your ending.</p>
+  <div class="chips" id="chips" aria-label="Endings in alphabetical order"></div>
 
   <div class="opts">
     <label><input type="checkbox" id="optAccents" checked> <span>Ignore accents (so <em>ydd</em> also finds <em>gwŷdd</em>)</span></label>
     <label><input type="checkbox" id="optVowel" checked> <span>Keep single vowels separate from diphthongs. If you type just <em>i</em>, leave out words ending <em>-ai</em>, <em>-ei</em> or <em>-oi</em>. If you type just <em>u</em>, leave out words ending <em>-au</em>, <em>-eu</em> or <em>-iu</em>. Untick to see every word that ends in that letter.</span></label>
     <label><input type="checkbox" id="optNames" checked> <span>Include names (capitalised words, shown in italics)</span></label>
+    <label><input type="checkbox" id="optMean" checked> <span>Show meanings next to each word (only about a quarter of the words have one; tap any word for more)</span></label>
     <label>Sort by
       <select id="optSort">
         <option value="az">alphabetical</option>
@@ -96,11 +118,18 @@
     licensed under the <a href="https://www.gnu.org/licenses/lgpl-3.0.html" target="_blank" rel="noopener">GNU LGPL v3 or later</a>.
     Source: <a href="https://github.com/techiaith/hunspell-cy" target="_blank" rel="noopener">techiaith/hunspell-cy</a>.
     Plural forms were added by adding the regular endings that dictionary defines.</p>
-    <p>Meanings: fetched live from <a href="https://en.wiktionary.org" target="_blank" rel="noopener">Wiktionary</a>, available under
-    <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA</a>. Many rare words have no entry there;
-    for those, try Geiriadur Prifysgol Cymru (link under each word).</p>
-    <p>This is a personal tool inspired by the book <em>Yr Odliadur</em>. It contains no text from that book, and it is not affiliated with its authors or publisher.
-    A list of words that share an ending is not the same as a list of words that rhyme in strict-metre poetry, so check against a printed odliadur for important work.</p>
+    <p>Meanings: most come from <a href="https://en.wiktionary.org" target="_blank" rel="noopener">Wiktionary</a> (Welsh entries, extracted with
+    <a href="https://kaikki.org" target="_blank" rel="noopener">kaikki.org</a>), available under
+    <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>. About 4,000 more come from the
+    <a href="https://github.com/apertium/apertium-cy-en" target="_blank" rel="noopener">Welsh–English data of the Apertium project</a>
+    (based on Eurfa by Kevin Donnelly and others), under the <a href="LICENSE-GPL-2.0.txt" target="_blank" rel="noopener">GNU GPL v2</a>.
+    Roughly a quarter of the words have a meaning; for the rest, tap the word and try the Wiktionary or Geiriadur Prifysgol Cymru links.
+    Tapping a word can also fetch the fuller Wiktionary entry live.</p>
+    <p>Inspired by the book <em>Yr Odliadur</em> by Roy Stephens and Alan Llwyd (ISBN 978-1-84323-903-1). This is an independent tool, not affiliated with or
+    endorsed by the authors or publisher. It does not reproduce the book, and its word list differs from the book's. A list of words that share an ending is not the
+    same as a list of words that rhyme in strict-metre poetry, so for the authoritative guide to rhyme, including the rules for <em>wy</em>, <em>y</em>, <em>u</em> and
+    <em>i</em>, use the book.</p>
+    <p class="ver">Version 24 Oct 2026, 16:04 (UK time)</p>
   </footer>
 </main>
 
@@ -114,30 +143,86 @@
   function strip(s) { return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
   function lower(s) { return s.normalize('NFC').toLowerCase(); }
 
-  fetch('words.json').then(function (r) { return r.json(); }).then(function (data) {
-    words = data;
+  var MW = {}, ME = {};          // meanings: Wiktionary-derived, Eurfa/Apertium-derived
+  var ENDS = [], chipKey = '', chipOffset = 0, HALF = 7;
+
+  function getJson(url) { return fetch(url).then(function (r) { if (!r.ok) throw new Error(url); return r.json(); }); }
+
+  Promise.all([
+    getJson('words.json'),
+    getJson('meanings.json').catch(function () { return {}; }),
+    getJson('meanings-extra.json').catch(function () { return {}; })
+  ]).then(function (res) {
+    words = res[0]; MW = res[1]; ME = res[2];
     norm = new Array(words.length);
     isName = new Array(words.length);
+    var counts = Object.create(null);
     for (var i = 0; i < words.length; i++) {
       norm[i] = null;
       var c = words[i].charAt(0);
       isName[i] = c !== c.toLowerCase();
+      var t = strip(words[i]);
+      for (var L = 1; L <= 4 && L <= t.length; L++) {
+        var e = t.slice(t.length - L);
+        counts[e] = (counts[e] || 0) + 1;
+      }
     }
+    ENDS = Object.keys(counts).filter(function (e) { return counts[e] >= 30 && /^[a-z]+$/.test(e); })
+      .sort(function (x, y) { return x < y ? -1 : x > y ? 1 : 0; });
+    ENDCOUNT = counts;
+    drawChips('');
     $('count').textContent = words.length.toLocaleString() + ' words loaded. Type an ending above.';
     var q = new URLSearchParams(location.search).get('e');
     if (q) { $('ending').value = q; search(); }
   }).catch(function () {
     $('count').textContent = 'Could not load the word list (words.json).';
   });
+  var ENDCOUNT = {};
 
-  var CHIPS = ['ydd', 'y', 'i', 'u', 'wy', 'yw', 'iw', 'aw', 'ew', 'ow', 'ai', 'au', 'ei', 'eu', 'oi',
-    'a', 'e', 'o', 'ad', 'ed', 'ol', 'ig', 'og', 'yn', 'on', 'ion', 'ant', 'aeth', 'wyth', 'ach'];
-  CHIPS.forEach(function (c) {
-    var b = document.createElement('button');
-    b.className = 'chip'; b.type = 'button'; b.textContent = '-' + c;
-    b.addEventListener('click', function () { $('ending').value = c; search(); });
-    $('chips').appendChild(b);
-  });
+  // Alphabetical strip of endings, centred on the ending being searched.
+  function drawChips(key) {
+    chipKey = key;
+    var box = $('chips'); box.innerHTML = '';
+    var view = ENDS.slice();
+    var idx = 0, lo = 0, hi = view.length;
+    while (lo < hi) { var mid = (lo + hi) >> 1; if (view[mid] < key) lo = mid + 1; else hi = mid; }
+    idx = lo;
+    if (key && /^[a-z]+$/.test(key) && view[idx] !== key) view.splice(idx, 0, key);
+    var span = HALF * 2 + 1;
+    var centre = Math.max(0, Math.min(view.length - 1, idx + chipOffset));
+    var start = Math.max(0, Math.min(centre - HALF, view.length - span));
+    var end = Math.min(view.length, start + span);
+    function arrow(label, delta, disabled, title) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'chip arrow'; b.textContent = label; b.disabled = disabled; b.title = title;
+      b.addEventListener('click', function () { chipOffset += delta; drawChips(chipKey); });
+      return b;
+    }
+    box.appendChild(arrow('◀', -(HALF * 2 - 1), start === 0, 'Earlier in the alphabet'));
+    for (var i = start; i < end; i++) {
+      (function (e) {
+        var b = document.createElement('button');
+        b.type = 'button'; b.className = 'chip' + (e === key ? ' cur' : ''); b.textContent = '-' + e;
+        if (ENDCOUNT[e]) b.title = ENDCOUNT[e].toLocaleString() + ' words';
+        b.addEventListener('click', function () { $('ending').value = e; search(); });
+        box.appendChild(b);
+      })(view[i]);
+    }
+    box.appendChild(arrow('▶', HALF * 2 - 1, end >= view.length, 'Later in the alphabet'));
+  }
+
+  // Meanings: stored as "label|gloss" entries joined by " // "; inflected forms as "form|plural of x: gloss".
+  function meaningOf(w) {
+    var m = MW[w], src = 'Wiktionary';
+    if (!m) { m = ME[w]; src = 'Eurfa / Apertium'; }
+    if (!m) return null;
+    var entries = m.split(' // ').map(function (p) {
+      var i = p.indexOf('|');
+      var lab = i < 0 ? '' : p.slice(0, i), g = i < 0 ? p : p.slice(i + 1);
+      return { lab: lab === 'form' ? '' : lab, g: g };
+    });
+    return { src: src, entries: entries };
+  }
 
   function search() {
     var raw = $('ending').value.trim().replace(/^-+/, '');
@@ -147,6 +232,7 @@
     var sort = $('optSort').value;
     selected = null; closeDetail();
     $('wyNote').hidden = !/^wy/i.test(raw);
+    chipOffset = 0; drawChips(strip(raw));
     if (!raw) { $('count').textContent = words.length ? words.length.toLocaleString() + ' words loaded. Type an ending above.' : ''; $('list').innerHTML = ''; $('more').hidden = true; return; }
     var key = ignoreAccents ? strip(raw) : lower(raw);
     var blockers = key === 'i' ? 'aeo' : key === 'u' ? 'aei' : '';
@@ -172,14 +258,30 @@
 
   function render() {
     var list = $('list');
+    var showMeanings = $('optMean').checked;
+    list.classList.toggle('mean', showMeanings);
     var end = Math.min(results.length, shown + PAGE);
     var frag = document.createDocumentFragment();
     for (var i = shown; i < end; i++) {
       var li = document.createElement('li');
       var b = document.createElement('button');
-      b.type = 'button'; b.textContent = results[i]; b.dataset.w = results[i];
+      b.type = 'button'; b.dataset.w = results[i];
       var c = results[i].charAt(0);
       if (c !== c.toLowerCase()) b.className = 'name';
+      var mm = showMeanings ? meaningOf(results[i]) : null;
+      if (mm) {
+        var e0 = mm.entries[0];
+        var sw = document.createElement('span'); sw.className = 'w'; sw.textContent = results[i];
+        b.appendChild(sw);
+        if (e0.lab) { var sl = document.createElement('span'); sl.className = 'l'; sl.textContent = e0.lab; b.appendChild(sl); }
+        else b.appendChild(document.createTextNode(' '));
+        var sg = document.createElement('span'); sg.className = 'g'; sg.textContent = e0.g; b.appendChild(sg);
+        b.title = mm.entries.map(function (x) { return (x.lab ? x.lab + ': ' : '') + x.g; }).join(' | ');
+      } else if (showMeanings) {
+        var sw2 = document.createElement('span'); sw2.className = 'w'; sw2.textContent = results[i]; b.appendChild(sw2);
+      } else {
+        b.textContent = results[i];
+      }
       li.appendChild(b); frag.appendChild(li);
     }
     list.appendChild(frag);
@@ -211,10 +313,30 @@
       closeDetail();
       var s = $('list').querySelector('button.sel'); if (s) s.classList.remove('sel');
     });
-    lookup(word).then(function (html) {
-      if (selected !== word) return;
-      var box = $('defs'); if (box) box.replaceChildren.apply(box, html);
-    });
+    var mm = meaningOf(word), defs = $('defs');
+    function runLive() {
+      defs.innerHTML = 'Looking up the fuller Wiktionary entry&hellip;';
+      lookup(word).then(function (html) {
+        if (selected !== word) return;
+        var box = $('defs'); if (box) box.replaceChildren.apply(box, html);
+      });
+    }
+    if (mm) {
+      defs.textContent = '';
+      mm.entries.forEach(function (x) {
+        var p = document.createElement('div'); p.className = 'own';
+        if (x.lab) { var l = document.createElement('span'); l.className = 'lab'; l.textContent = x.lab + '  '; p.appendChild(l); }
+        p.appendChild(document.createTextNode(x.g));
+        defs.appendChild(p);
+      });
+      var src = document.createElement('div'); src.className = 'src'; src.textContent = 'Source: ' + mm.src + ' (bundled in this page)';
+      defs.appendChild(src);
+      var fb = document.createElement('button'); fb.type = 'button'; fb.className = 'full'; fb.textContent = 'Fuller Wiktionary entry (live)';
+      fb.addEventListener('click', runLive);
+      defs.appendChild(fb);
+    } else {
+      runLive();
+    }
   }
 
   function textOf(htmlString) {
@@ -250,7 +372,7 @@
 
   $('go').addEventListener('click', search);
   $('ending').addEventListener('keydown', function (e) { if (e.key === 'Enter') search(); });
-  ['optAccents', 'optVowel', 'optNames', 'optSort'].forEach(function (id) { $(id).addEventListener('change', search); });
+  ['optAccents', 'optVowel', 'optNames', 'optSort', 'optMean'].forEach(function (id) { $(id).addEventListener('change', search); });
   $('more').addEventListener('click', render);
 })();
 </script>
