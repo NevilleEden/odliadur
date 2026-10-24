@@ -49,6 +49,8 @@
   #detail .own { margin: 6px 0 4px; }
   #detail .own .lab { color: var(--muted); font-size: .8rem; }
   #detail .src { color: var(--muted); font-size: .8rem; margin: 2px 0 8px; }
+  #detail .links { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; }
+  #detail .links a { margin-right: 0; }
   #detail .full { margin: 4px 0 8px; padding: 5px 10px; border: 1px solid var(--line); background: var(--chip); color: var(--fg); border-radius: 8px; }
   .ver { margin-top: 10px; }
   .opts { display: grid; gap: 6px; margin: 14px 0; color: var(--muted); font-size: .95rem; }
@@ -123,13 +125,12 @@
     <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>. About 4,000 more come from the
     <a href="https://github.com/apertium/apertium-cy-en" target="_blank" rel="noopener">Welsh–English data of the Apertium project</a>
     (based on Eurfa by Kevin Donnelly and others), under the <a href="LICENSE-GPL-2.0.txt" target="_blank" rel="noopener">GNU GPL v2</a>.
-    Roughly a quarter of the words have a meaning; for the rest, tap the word and try the Wiktionary or Geiriadur Prifysgol Cymru links.
-    Tapping a word can also fetch the fuller Wiktionary entry live.</p>
+    Roughly a quarter of the words have a meaning; for the rest, tap the word and use the link to Geiriadur Prifysgol Cymru.</p>
     <p>Inspired by the book <em>Yr Odliadur</em> by Roy Stephens and Alan Llwyd (ISBN 978-1-84323-903-1). This is an independent tool, not affiliated with or
     endorsed by the authors or publisher. It does not reproduce the book, and its word list differs from the book's. A list of words that share an ending is not the
     same as a list of words that rhyme in strict-metre poetry, so for the authoritative guide to rhyme, including the rules for <em>wy</em>, <em>y</em>, <em>u</em> and
     <em>i</em>, use the book.</p>
-    <p class="ver">Version 24 Oct 2026, 16:13 (UK time)</p>
+    <p class="ver">Version 24 Oct 2026, 18:22 (UK time)</p>
   </footer>
 </main>
 
@@ -317,69 +318,27 @@
     d.style.display = 'block';
     var enc = encodeURIComponent(word);
     d.innerHTML = '<h2><span></span><button class="close" type="button" aria-label="Close">&times;</button></h2>' +
-      '<div id="defs">Looking up meaning&hellip;</div>' +
-      '<div class="links"><a href="https://en.wiktionary.org/wiki/' + enc + '#Welsh" target="_blank" rel="noopener">Wiktionary</a>' +
-      '<a href="https://geiriadur.ac.uk/gpc/gpc.html?' + enc + '" target="_blank" rel="noopener">GPC (Geiriadur Prifysgol Cymru)</a></div>';
+      '<div id="defs"></div>' +
+      '<div class="links"><a href="https://geiriadur.ac.uk/gpc/gpc.html?' + enc + '" target="_blank" rel="noopener">Look up in GPC (Geiriadur Prifysgol Cymru)</a></div>';
     d.querySelector('h2 span').textContent = word;
     d.querySelector('.close').addEventListener('click', function () {
       closeDetail();
       var s = $('list').querySelector('button.sel'); if (s) s.classList.remove('sel');
     });
     var mm = meaningOf(word), defs = $('defs');
-    function runLive() {
-      defs.innerHTML = 'Looking up the fuller Wiktionary entry&hellip;';
-      lookup(word).then(function (html) {
-        if (selected !== word) return;
-        var box = $('defs'); if (box) box.replaceChildren.apply(box, html);
-      });
-    }
     if (mm) {
-      defs.textContent = '';
       mm.entries.forEach(function (x) {
         var p = document.createElement('div'); p.className = 'own';
         if (x.lab) { var l = document.createElement('span'); l.className = 'lab'; l.textContent = x.lab + '  '; p.appendChild(l); }
         p.appendChild(document.createTextNode(x.g));
         defs.appendChild(p);
       });
-      var src = document.createElement('div'); src.className = 'src'; src.textContent = 'Source: ' + mm.src + ' (bundled in this page)';
+      var src = document.createElement('div'); src.className = 'src'; src.textContent = 'Source: ' + mm.src;
       defs.appendChild(src);
-      var fb = document.createElement('button'); fb.type = 'button'; fb.className = 'full'; fb.textContent = 'Fuller Wiktionary entry (live)';
-      fb.addEventListener('click', runLive);
-      defs.appendChild(fb);
     } else {
-      runLive();
+      var none = document.createElement('p'); none.textContent = 'No meaning is bundled for this word. Try the dictionary link below.';
+      defs.appendChild(none);
     }
-  }
-
-  function textOf(htmlString) {
-    var doc = new DOMParser().parseFromString(htmlString, 'text/html');
-    return (doc.body.textContent || '').trim();
-  }
-
-  function lookup(word) {
-    var url = 'https://en.wiktionary.org/api/rest_v1/page/definition/' + encodeURIComponent(word);
-    return fetch(url, { headers: { 'Accept': 'application/json' } }).then(function (r) {
-      if (!r.ok) throw new Error('none');
-      return r.json();
-    }).then(function (data) {
-      var entries = data.cy || [];
-      if (!entries.length) throw new Error('none');
-      var nodes = [];
-      entries.forEach(function (en) {
-        var pos = document.createElement('div'); pos.className = 'pos'; pos.textContent = en.partOfSpeech || '';
-        var ol = document.createElement('ol');
-        (en.definitions || []).slice(0, 6).forEach(function (df) {
-          var t = textOf(df.definition || ''); if (!t) return;
-          var li = document.createElement('li'); li.textContent = t; ol.appendChild(li);
-        });
-        nodes.push(pos, ol);
-      });
-      return nodes;
-    }).catch(function () {
-      var p = document.createElement('p');
-      p.textContent = 'No Welsh entry found on Wiktionary (or it could not be reached). Try Geiriadur Prifysgol Cymru below.';
-      return [p];
-    });
   }
 
   $('go').addEventListener('click', search);
