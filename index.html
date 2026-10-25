@@ -87,7 +87,7 @@
     <input id="ending" type="text" inputmode="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="e.g. ydd">
     <button class="go" id="go" type="button">Find</button>
   </div>
-  <p class="chiphint" id="chiphint">The book's 560 chapter endings, in Welsh alphabetical order. Use the arrows to move along; searching centres the list on your ending.</p>
+  <p class="chiphint" id="chiphint">Endings in Welsh alphabetical order, the same 560 as the chapter headings in <em>Yr Odliadur</em>. Use the arrows to move along; searching centres the list on your ending.</p>
   <div class="chips" id="chips" aria-label="Endings in alphabetical order"></div>
 
   <div class="opts">
@@ -132,7 +132,7 @@
     The y/wy rule is by spelling only, so a few words with the talgron <em>wy</em> sound (such as <em>tanwydd</em>, <em>pinwydd</em>) appear under -wy… rather than -y…. A list of words that share an ending is not the
     same as a list of words that rhyme in strict-metre poetry, so for the authoritative guide to rhyme, including the rules for <em>wy</em>, <em>y</em>, <em>u</em> and
     <em>i</em>, use the book.</p>
-    <p class="ver">Version 25 Oct 2026, 19:11 (UK time)</p>
+    <p class="ver">Version 25 Oct 2026, 19:33 (UK time)</p>
   </footer>
 </main>
 
@@ -147,7 +147,7 @@
   function lower(s) { return s.normalize('NFC').toLowerCase(); }
 
   var MW = {}, ME = {};          // meanings: Wiktionary-derived, Eurfa/Apertium-derived
-  var ENDS = [], chipKey = '', chipOffset = 0, HALF = 7;
+  var ENDSET = {}, HINT = '', ENDS = [], chipKey = '', chipOffset = 0, HALF = 7;
 
   // The endings (chapter headings) are taken from the list on Geraint Jones's online copy of Yr Odliadur
   // (Gwasg Aredig), in Welsh alphabetical order. They are headings only, not word lists.
@@ -202,6 +202,8 @@
       isName[i] = c !== c.toLowerCase();
     }
     ENDS = ENDS_TEXT.split(' ');
+    ENDS.forEach(function (e) { ENDSET[e] = true; });
+    HINT = $('chiphint').innerHTML;
     drawChips('');
     var q = (new URLSearchParams(location.search)).get('e');
     if (q) { $('ending').value = q; search(); }
@@ -225,13 +227,22 @@
   function drawChips(key) {
     var box = $('chips');
     var view = ENDS.slice();
-    var idx;
-    var lo = 0, hi = view.length;
+    var idx = -1, curKey = key, anchor = null;
+    // The book files every word under the chapter that starts at its first vowel (or w), so
+    // -fa is under -a and -rwydd under -wydd. Find the longest chapter that the typed ending ends with.
     if (key && /^[a-z]+$/.test(key)) {
+      for (var j = 0; j < key.length; j++) { if (ENDSET[key.slice(j)]) { anchor = key.slice(j); break; } }
+    }
+    if (anchor) { idx = ENDS.indexOf(anchor); curKey = anchor; }
+    else if (key && /^[a-z]+$/.test(key)) {
+      var lo = 0, hi = view.length;
       while (lo < hi) { var mid = (lo + hi) >> 1; if (wcmp(view[mid], key) < 0) lo = mid + 1; else hi = mid; }
       idx = lo;
       if (view[idx] !== key) view.splice(idx, 0, key);
-    } else { idx = -1; }
+    }
+    var hint = $('chiphint');
+    if (anchor && anchor !== key) hint.innerHTML = 'In the book, words ending <em>-' + key + '</em> are listed under <em>-' + anchor + '</em>.';
+    else hint.innerHTML = HINT;
     var centre = idx < 0 ? 0 : idx;
     var total = 2 * HALF + 1;
     var start = Math.max(0, Math.min(view.length - total, centre - HALF + chipOffset));
@@ -247,7 +258,7 @@
     for (var i = start; i < end; i++) {
       (function (e) {
         var b = document.createElement('button');
-        b.type = 'button'; b.className = 'chip' + (e === key ? ' cur' : ''); b.textContent = e;
+        b.type = 'button'; b.className = 'chip' + (e === curKey ? ' cur' : ''); b.textContent = e;
         b.addEventListener('click', function () { $('ending').value = e; search(); });
         box.appendChild(b);
       })(view[i]);
