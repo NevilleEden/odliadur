@@ -22,7 +22,7 @@ This is a personal tool inspired by the book *Yr Odliadur*. It contains no text 
 
 ## Known limitations
 
-- It matches the letters at the end of a word. It does not yet separate the two different *wy* sounds, and it does not apply the foreword's rules about which vowels rhyme across *y*, *u* and *i*.
+- It matches the letters at the end of a word. The endings list (560 chapter headings) follows Geraint Jones's online copy of the book. *-y…* and *-wy…* endings are kept apart by spelling (a w after a vowel or after g belongs to the *y* chapter). It cannot tell the talgron *wy* sound in words such as *tanwydd*, and it does not apply the foreword's rules about which vowels rhyme across *y*, *u* and *i*.
 - Only about a quarter of the words have a bundled meaning. Many are rare, compound or inflected verb forms that the open dictionaries do not cover.
 - Some Wiktionary glosses are brief or technical; check anything important in Geiriadur Prifysgol Cymru.
 - Verb forms are included only where the source dictionary lists them as separate entries.

@@ -87,7 +87,7 @@
     <input id="ending" type="text" inputmode="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="e.g. ydd">
     <button class="go" id="go" type="button">Find</button>
   </div>
-  <p class="chiphint" id="chiphint">One-syllable endings in alphabetical order. Use the arrows to move along; searching centres the list on your ending.</p>
+  <p class="chiphint" id="chiphint">The book's 560 chapter endings, in Welsh alphabetical order. Use the arrows to move along; searching centres the list on your ending.</p>
   <div class="chips" id="chips" aria-label="Endings in alphabetical order"></div>
 
   <div class="opts">
@@ -106,7 +106,7 @@
 
   <div class="note" id="wyNote" hidden>
     Welsh has two different <em>wy</em> sounds that do not rhyme with each other (lleddf, as in <em>mwyn</em>, and talgron, as in <em>gwyn</em>).
-    This version lists every word that ends in the letters you typed, so it does not separate them yet.
+    This version goes by spelling only. It keeps <em>-wy</em> apart from <em>-y</em>, but it cannot tell which sound a particular word has: some words listed here are talgron, as the book files under <em>-y</em> (for example compounds of <em>gwŷdd</em> such as <em>tanwydd</em>).
   </div>
 
   <div class="count" id="count" aria-live="polite"></div>
@@ -127,10 +127,12 @@
     (based on Eurfa by Kevin Donnelly and others), under the <a href="LICENSE-GPL-2.0.txt" target="_blank" rel="noopener">GNU GPL v2</a>.
     Roughly a quarter of the words have a meaning; for the rest, tap the word and use the link to Geiriadur Prifysgol Cymru.</p>
     <p>Inspired by the book <em>Yr Odliadur</em> by Roy Stephens and Alan Llwyd (ISBN 978-1-84323-903-1). This is an independent tool, not affiliated with or
-    endorsed by the authors or publisher. It does not reproduce the book, and its word list differs from the book's. A list of words that share an ending is not the
+    endorsed by the authors or publisher. It does not reproduce the book, and its word list differs from the book's. The list of endings follows the chapter headings of the online copy of the book by
+    <a href="https://www.cs.ox.ac.uk/people/geraint.jones/rhydychen.org/gwasg.aredig/odliadur/" target="_blank" rel="noopener">Geraint Jones (Gwasg Aredig)</a>; the words under each ending come from the Bangor dictionary, not from the book.
+    The y/wy rule is by spelling only, so a few words with the talgron <em>wy</em> sound (such as <em>tanwydd</em>, <em>pinwydd</em>) appear under -wy… rather than -y…. A list of words that share an ending is not the
     same as a list of words that rhyme in strict-metre poetry, so for the authoritative guide to rhyme, including the rules for <em>wy</em>, <em>y</em>, <em>u</em> and
     <em>i</em>, use the book.</p>
-    <p class="ver">Version 24 Oct 2026, 18:22 (UK time)</p>
+    <p class="ver">Version 25 Oct 2026, 09:28 (UK time)</p>
   </footer>
 </main>
 
@@ -147,7 +149,47 @@
   var MW = {}, ME = {};          // meanings: Wiktionary-derived, Eurfa/Apertium-derived
   var ENDS = [], chipKey = '', chipOffset = 0, HALF = 7;
 
-  function getJson(url) { return fetch(url).then(function (r) { if (!r.ok) throw new Error(url); return r.json(); }); }
+  // The endings (chapter headings) are taken from the list on Geraint Jones's online copy of Yr Odliadur
+  // (Gwasg Aredig), in Welsh alphabetical order. They are headings only, not word lists.
+  var ENDS_TEXT = 'a ab abl abr ac acl acr act ach acht ad adl adn adr add ae aech aed aedd aeg ael aell aem aen aent aer aes aeth af afl afn afr aff afft ag agl agr ang ai aib aich aid aidd aif aiff aifft aig aing ail aill aillt aim ain ainc aint aip air ais aisg aist ait aith al alc alch ald alf alff alm alp als alst all allt am ambl ambr aml amp ampl an anc ancr and ans ant ap apl ar arc arch ard ardd arf arff arll arm arn arp ars art arts arth as asb asg asgl asn ast astl astr at atr ath athl athr au audd aul aun aur aus aw awb awc awch awd awdl awdr awdd awf awg awl awn awns awnt awr awrth aws awst ayw e eb ebr ec ecr ech ed edl edn edr edd eddf ef efl efn efr efft eg egl egr eng engl ei eibl eibr eic eich eid eidr eifl eifn eifr eig eigl eigr eingl eil eilch eils eill eillt eim ein eind eint eip eir eirch eirdd eirff eirll eirt eirth eisg eist eistr eit eitl eithr el elc eld elf elff elm elp elt ell ellt em eml emp en enc endr ens ent entr ep er erc erch erdd erf erl erm ern ers ert erth es esb esg est estl estr et ets eth ethr eu eud eus ew ewc ewch ewl ewn ewr eydd eyg eyrn i ib ibl ibr ic icr ics ich id idl idr idd if ifr iff ifft ig igl ign ing il ilff ilm ilt ill im imp in inc ind indr ins ip ir irf is isg isgl ist istl istr it ith ithr iw iwb iwl iwn iwr iws iwt o ob obl obr oc ocr ocs och ochl ochr od odl odr odd oddf oe oech oed oedl oedd oeg oel oem oen oent oer oes oesg oest oeth of ofl ofn ofr off offr offt og ogl ogn ogr ong ongl oi oid oig oir ois oist oit ol olc olch olp ols oll ollt om omp on onc ond onn ons ont op opr or orc orch ord ordd orf orff orm orn orp ors ort orth os osb osg osgl ost ot ots oth ous owch own ownd owns ows oyw u ub uch ud udr udd uf ug ugl ugn ul ull um ump un unt ur urdd urf urn urs urt us usg ust ustl ut uth uthr uw uwch uwd uwn w wb wbl wc wcl wcr wcs wch wd wdn wdr wddf wf wfl wfn wfr wff wfft wg wgl wgn wgr wng wl wlc wlch wlff wll wllt wlltr wm wmp wn wnc wnt wp wpl wr wrb wrch wrdd wrf wrm wrn wrp wrs wrt wrth ws wsg wsgl wst wt wth wthr wy wybr wyd wydr wydd wyf wyg wygl wyl wyll wym wymp wyn wynt wyr wys wysg wystl wystr wyt wyth y yb ybl ych yd ydn ydr ydd yf yfl yfn yfr yff yg ygl ygn yng yl ylch yll yllt ym yml ymp yn ynd ynn ynt yr yrc yrch yrd yrdd yrf yrff yrn yrr yrs yrt yrth ys ysb ysg ysgl yst ystr yt yth ythr yw ywch ywn';
+
+  // Welsh alphabet order: a b c ch d dd e f ff g ng h i j l ll m n o p ph r rh s t th u w y
+  var ORDER = ['a','b','c','ch','d','dd','e','f','ff','g','ng','h','i','j','k','l','ll','m','n','o','p','ph','q','r','rh','s','t','th','u','v','w','x','y','z'];
+  var RANK = {}; ORDER.forEach(function (l, i) { RANK[l] = i; });
+  function wkey(str) { return (str.match(/ch|dd|ff|ng|ll|ph|rh|th|./g) || []).map(function (l) { return RANK[l] === undefined ? 99 : RANK[l]; }); }
+  function wcmp(x, y) {
+    var a = wkey(x), b = wkey(y), n = Math.min(a.length, b.length);
+    for (var i = 0; i < n; i++) if (a[i] !== b[i]) return a[i] - b[i];
+    return a.length - b.length;
+  }
+
+  // Does the (accent-stripped, lower-case) word t end in the ending key?
+  // Two spelling rules keep the y and wy chapters apart, as the book does:
+  //  - a w after a vowel (as in newydd, ffawydd) belongs to that vowel (aw, ew, iw, ow, uw, yw),
+  //    and a w after g (gw-, as in gwyn, gwydd) is a consonant, so these words end in -y.., not -wy..
+  //  - a w after any other consonant (mwyn, chwydd, tanwydd) is listed under -wy...
+  // Whether a particular such word has the lleddf or the talgron sound depends on the word itself and
+  // cannot be told from the spelling, so this is a rule of spelling only.
+  function accept(t, key, vowelRule) {
+    if (t.length < key.length || t.slice(t.length - key.length) !== key) return false;
+    var before = t.charAt(t.length - key.length - 1);
+    var c0 = key.charAt(0);
+    if (c0 === 'y' && before === 'w') {
+      var pp = t.charAt(t.length - key.length - 2);
+      if (!(pp === 'g' || 'aeiouy'.indexOf(pp) !== -1 && pp !== '')) return false;
+    } else if (key.slice(0, 2) === 'wy' && before !== '' && (before === 'g' || 'aeiouy'.indexOf(before) !== -1)) {
+      return false;
+    }
+    if (vowelRule && t.length > 1) {
+      var blockers = key === 'i' ? 'aeo' : key === 'u' ? 'aei' : '';
+      if (blockers && blockers.indexOf(t.charAt(t.length - key.length - 1)) !== -1) return false;
+    }
+    return true;
+  }
+
+  function getJson(url) {
+    return fetch(url).then(function (r) { if (!r.ok) throw new Error(url); return r.json(); });
+  }
 
   Promise.all([
     getJson('words.json'),
@@ -155,110 +197,90 @@
     getJson('meanings-extra.json').catch(function () { return {}; })
   ]).then(function (res) {
     words = res[0]; MW = res[1]; ME = res[2];
-    norm = new Array(words.length);
-    isName = new Array(words.length);
-    var counts = Object.create(null);
-    var rimeRe = /[aeiouwy]+[^aeiouwy]*$/;
     for (var i = 0; i < words.length; i++) {
-      norm[i] = null;
       var c = words[i].charAt(0);
       isName[i] = c !== c.toLowerCase();
-      var m = rimeRe.exec(strip(words[i]));
-      if (!m) continue;
-      var r = m[0];
-      if (/^w[aeiou]/.test(r)) r = r.slice(1);   // w before another vowel (gwaith, gwal) is a consonant, not part of the rhyme
-      counts[r] = (counts[r] || 0) + 1;
     }
-    // An "ending" is the rhyming part of the last syllable: its vowel (or diphthong) plus any consonants after it.
-    var DIPH = ' ae ai au aw ei eu ew oe oi ow uw yw iw ia ie io iu wy iai iau ';
-    ENDS = Object.keys(counts).filter(function (e) {
-      var run = /^[aeiouwy]+/.exec(e)[0], tail = e.slice(run.length);
-      return counts[e] >= 15 && /^[a-z]+$/.test(e) && tail.length <= 3 && (run.length === 1 || DIPH.indexOf(' ' + run + ' ') !== -1);
-    }).sort(function (x, y) { return x < y ? -1 : x > y ? 1 : 0; });
+    ENDS = ENDS_TEXT.split(' ');
     drawChips('');
-    $('count').textContent = words.length.toLocaleString() + ' words loaded. Type an ending above.';
-    var q = new URLSearchParams(location.search).get('e');
+    var q = (new URLSearchParams(location.search)).get('e');
     if (q) { $('ending').value = q; search(); }
+    else { $('count').textContent = words.length.toLocaleString() + ' words loaded. Type an ending, or tap one above.'; }
   }).catch(function () {
-    $('count').textContent = 'Could not load the word list (words.json).';
+    $('count').textContent = 'Could not load the word list. Please reload the page.';
   });
+
   var endCache = {};
   function endCount(e) {
-    if (endCache[e] === undefined) {
+    var vr = $('optVowel').checked, k = e + (vr ? '1' : '0');
+    if (endCache[k] === undefined) {
       var n = 0;
-      for (var i = 0; i < words.length; i++) { if (strip(words[i]).slice(-e.length) === e) n++; }
-      endCache[e] = n;
+      for (var i = 0; i < words.length; i++) { if (accept(strip(words[i]), e, vr)) n++; }
+      endCache[k] = n;
     }
-    return endCache[e];
+    return endCache[k];
   }
 
-  // Alphabetical strip of endings, centred on the ending being searched.
+  // Strip of endings in Welsh alphabetical order, centred on the searched ending.
   function drawChips(key) {
-    chipKey = key;
-    var box = $('chips'); box.innerHTML = '';
+    var box = $('chips');
     var view = ENDS.slice();
-    var idx = 0, lo = 0, hi = view.length;
-    while (lo < hi) { var mid = (lo + hi) >> 1; if (view[mid] < key) lo = mid + 1; else hi = mid; }
-    idx = lo;
-    if (key && /^[a-z]+$/.test(key) && view[idx] !== key) view.splice(idx, 0, key);
-    var span = HALF * 2 + 1;
-    var centre = Math.max(0, Math.min(view.length - 1, idx + chipOffset));
-    var start = Math.max(0, Math.min(centre - HALF, view.length - span));
-    var end = Math.min(view.length, start + span);
-    function arrow(label, delta, disabled, title) {
+    var idx;
+    var lo = 0, hi = view.length;
+    if (key && /^[a-z]+$/.test(key)) {
+      while (lo < hi) { var mid = (lo + hi) >> 1; if (wcmp(view[mid], key) < 0) lo = mid + 1; else hi = mid; }
+      idx = lo;
+      if (view[idx] !== key) view.splice(idx, 0, key);
+    } else { idx = -1; }
+    var centre = idx < 0 ? 0 : idx;
+    var total = 2 * HALF + 1;
+    var start = Math.max(0, Math.min(view.length - total, centre - HALF + chipOffset));
+    var end = Math.min(view.length, start + total);
+    box.innerHTML = '';
+    function arrow(txt, label, dis, delta) {
       var b = document.createElement('button');
-      b.type = 'button'; b.className = 'chip arrow'; b.textContent = label; b.disabled = disabled; b.title = title;
-      b.addEventListener('click', function () { chipOffset += delta; drawChips(chipKey); });
-      return b;
+      b.type = 'button'; b.className = 'chip arrow'; b.textContent = txt; b.setAttribute('aria-label', label); b.disabled = dis;
+      b.addEventListener('click', function () { chipOffset += delta; drawChips(key); });
+      box.appendChild(b);
     }
-    box.appendChild(arrow('◀', -(HALF * 2 - 1), start === 0, 'Earlier in the alphabet'));
+    arrow('◀', 'Earlier endings', start <= 0, -HALF);
     for (var i = start; i < end; i++) {
       (function (e) {
         var b = document.createElement('button');
-        b.type = 'button'; b.className = 'chip' + (e === key ? ' cur' : ''); b.textContent = '-' + e;
-        b.title = endCount(e).toLocaleString() + ' words';
+        b.type = 'button'; b.className = 'chip' + (e === key ? ' cur' : ''); b.textContent = e;
         b.addEventListener('click', function () { $('ending').value = e; search(); });
         box.appendChild(b);
       })(view[i]);
     }
-    box.appendChild(arrow('▶', HALF * 2 - 1, end >= view.length, 'Later in the alphabet'));
+    arrow('▶', 'Later endings', end >= view.length, HALF);
   }
 
-  // Meanings: stored as "label|gloss" entries joined by " // "; inflected forms as "form|plural of x: gloss".
-  function meaningOf(w) {
-    var m = MW[w], src = 'Wiktionary';
-    if (!m) { m = ME[w]; src = 'Eurfa / Apertium'; }
-    if (!m) return null;
-    var entries = m.split(' // ').map(function (p) {
-      var i = p.indexOf('|');
-      var lab = i < 0 ? '' : p.slice(0, i), g = i < 0 ? p : p.slice(i + 1);
+  function parseEntries(str) {
+    return str.split(' // ').map(function (x) {
+      var k = x.indexOf('|'), lab = k < 0 ? '' : x.slice(0, k), g = k < 0 ? x : x.slice(k + 1);
       return { lab: lab === 'form' ? '' : lab, g: g };
     });
-    return { src: src, entries: entries };
+  }
+  function meaningOf(w) {
+    if (MW[w]) return { entries: parseEntries(MW[w]), src: 'Wiktionary (CC BY-SA 4.0)' };
+    if (ME[w]) return { entries: parseEntries(ME[w]), src: 'Eurfa / Apertium (GPL v2)' };
+    return null;
   }
 
   function search() {
-    var raw = $('ending').value.trim().replace(/^-+/, '');
-    var ignoreAccents = $('optAccents').checked;
-    var wholeVowel = $('optVowel').checked;
-    var withNames = $('optNames').checked;
-    var sort = $('optSort').value;
-    selected = null; closeDetail();
-    $('wyNote').hidden = !/^wy/i.test(raw);
+    var raw = $('ending').value.trim();
+    if (!raw) { $('count').textContent = 'Type an ending first.'; return; }
+    var ignoreAccents = $('optAccents').checked, wholeVowel = $('optVowel').checked,
+        withNames = $('optNames').checked, sort = $('optSort').value;
     chipOffset = 0; drawChips(strip(raw));
-    if (!raw) { $('count').textContent = words.length ? words.length.toLocaleString() + ' words loaded. Type an ending above.' : ''; $('list').innerHTML = ''; $('more').hidden = true; return; }
+    $('wyNote').hidden = !/^w?y/.test(strip(raw));
     var key = ignoreAccents ? strip(raw) : lower(raw);
-    var blockers = key === 'i' ? 'aeo' : key === 'u' ? 'aei' : '';
     var out = [];
     for (var i = 0; i < words.length; i++) {
       if (!withNames && isName[i]) continue;
       var w = words[i];
       var t = ignoreAccents ? strip(w) : lower(w);
-      if (t.length < key.length || t.slice(t.length - key.length) !== key) continue;
-      if (wholeVowel && blockers && t.length > 1) {
-        var prev = t.charAt(t.length - 2);
-        if (blockers.indexOf(prev) !== -1) continue;
-      }
+      if (!accept(t, key, wholeVowel)) continue;
       out.push(w);
     }
     if (sort === 'short') out.sort(function (a, b) { return a.length - b.length || a.localeCompare(b, 'cy'); });
