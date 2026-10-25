@@ -132,7 +132,7 @@
     The y/wy rule is by spelling only, so a few words with the talgron <em>wy</em> sound (such as <em>tanwydd</em>, <em>pinwydd</em>) appear under -wy… rather than -y…. A list of words that share an ending is not the
     same as a list of words that rhyme in strict-metre poetry, so for the authoritative guide to rhyme, including the rules for <em>wy</em>, <em>y</em>, <em>u</em> and
     <em>i</em>, use the book.</p>
-    <p class="ver">Version 25 Oct 2026, 09:28 (UK time)</p>
+    <p class="ver">Version 25 Oct 2026, 19:11 (UK time)</p>
   </footer>
 </main>
 
@@ -341,7 +341,8 @@
     var enc = encodeURIComponent(word);
     d.innerHTML = '<h2><span></span><button class="close" type="button" aria-label="Close">&times;</button></h2>' +
       '<div id="defs"></div>' +
-      '<div class="links"><a href="https://geiriadur.ac.uk/gpc/gpc.html?' + enc + '" target="_blank" rel="noopener">Look up in GPC (Geiriadur Prifysgol Cymru)</a></div>';
+      '<div class="links"><a href="https://geiriadur.ac.uk/gpc/gpc.html?' + enc + '" target="_blank" rel="noopener">Look up in GPC (Geiriadur Prifysgol Cymru)</a></div>' +
+      '<p class="src">Not every word is in GPC; the list includes modern, technical and compound words that older dictionaries don\'t record.</p>';
     d.querySelector('h2 span').textContent = word;
     d.querySelector('.close').addEventListener('click', function () {
       closeDetail();
