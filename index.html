@@ -92,7 +92,7 @@
   <div class="chips" id="chips" aria-label="Endings in alphabetical order"></div>
 
   <div class="opts">
-    <label><input type="checkbox" id="optAccents" checked> <span>Ignore accents (so <em>ydd</em> also finds <em>gwŷdd</em>)</span></label>
+    <label><input type="checkbox" id="optAccents" checked> <span>Ignore accents, as the book does (so <em>an</em> also finds <em>tân</em>, and <em>ydd</em> finds <em>gwŷdd</em>). Untick to match accents exactly, for example <em>ân</em> to find only words with a long <em>â</em>.</span></label>
     <label><input type="checkbox" id="optVowel" checked> <span>Keep single vowels separate from diphthongs. If you type just <em>i</em>, leave out words ending <em>-ai</em>, <em>-ei</em> or <em>-oi</em>. If you type just <em>u</em>, leave out words ending <em>-au</em>, <em>-eu</em> or <em>-iu</em>. Untick to see every word that ends in that letter.</span></label>
     <label><input type="checkbox" id="optPl" checked> <span>Include plurals of nouns in <em>-wr</em> (such as <em>gweithwyr</em>); the book does not list these, so they are underlined</span></label>
     <label><input type="checkbox" id="optNames" checked> <span>Include names (capitalised words, shown in italics)</span></label>
@@ -136,7 +136,7 @@
     The split between the y… and wy… chapters follows rules worked out from the book's chapters and may be wrong for a few words. A list of words that share an ending is not the
     same as a list of words that rhyme in strict-metre poetry, so for the authoritative guide to rhyme, including the rules for <em>wy</em>, <em>y</em>, <em>u</em> and
     <em>i</em>, use the book.</p>
-    <p class="ver">Version 26 Oct 2026, 15:30 (UK time)</p>
+    <p class="ver">Version 26 Oct 2026, 15:47 (UK time)</p>
   </footer>
 </main>
 
@@ -184,6 +184,7 @@
   // Endings where the y/wy split has not yet been checked against the book
   var UNSURE = wl('wy wyth wyt wyg wygl wym wymp wysg wystl wystr wybr wydr');
   function wyClass(t, w, rest) {
+    t = strip(t);                                    // the rules go by letters; circumflexes are read from w below
     var E = 'wy' + rest;
     if (!ENDSET[E]) return 'y';                     // there is no wy chapter, so the word is under the y chapter
     var pos = t.length - E.length, b = t.slice(0, pos);
@@ -215,6 +216,7 @@
   function accept(t, key, vowelRule, w) {
     if (t.length < key.length || t.slice(t.length - key.length) !== key) return false;
     var before = t.charAt(t.length - key.length - 1);
+    if (before === 'ŵ') before = 'w';                 // so the y/wy rules also work when accents are not ignored
     var c0 = key.charAt(0);
     if (c0 === 'y' && before === 'w') {
       if (wyClass(t, w, key.slice(1)) !== 'y') return false;
