@@ -94,7 +94,7 @@
   <div class="opts">
     <label><input type="checkbox" id="optAccents" checked> <span>Ignore accents, as the book does (so <em>an</em> also finds <em>tân</em>, and <em>ydd</em> finds <em>gwŷdd</em>). Untick to match accents exactly, for example <em>ân</em> to find only words with a long <em>â</em>.</span></label>
     <label><input type="checkbox" id="optVowel" checked> <span>Keep single vowels separate from diphthongs. If you type just <em>i</em>, leave out words ending <em>-ai</em>, <em>-ei</em> or <em>-oi</em>. If you type just <em>u</em>, leave out words ending <em>-au</em>, <em>-eu</em> or <em>-iu</em>. Untick to see every word that ends in that letter.</span></label>
-    <label><input type="checkbox" id="optPl" checked> <span>Include plurals of nouns in <em>-wr</em> (such as <em>gweithwyr</em>); the book does not list these, so they are underlined</span></label>
+    <label><input type="checkbox" id="optPl" checked> <span>Show plural nouns that end in <em>-wyr</em>, such as <em>gweithwyr</em> (plural of <em>gweithiwr</em>). They appear under <em>-wyr</em>. The book does not list them, so they are underlined.</span></label>
     <label><input type="checkbox" id="optNames" checked> <span>Include names (capitalised words, shown in italics)</span></label>
     <label><input type="checkbox" id="optMean" checked> <span>Show meanings next to each word (only about a quarter of the words have one; tap any word for more)</span></label>
     <label>Sort by
@@ -136,7 +136,7 @@
     The split between the y… and wy… chapters follows rules worked out from the book's chapters and may be wrong for a few words. A list of words that share an ending is not the
     same as a list of words that rhyme in strict-metre poetry, so for the authoritative guide to rhyme, including the rules for <em>wy</em>, <em>y</em>, <em>u</em> and
     <em>i</em>, use the book.</p>
-    <p class="ver">Version 26 Oct 2026, 15:47 (UK time)</p>
+    <p class="ver">Version 26 Oct 2026, 15:54 (UK time)</p>
   </footer>
 </main>
 
@@ -371,7 +371,7 @@
       b.type = 'button'; b.dataset.w = results[i];
       var c = results[i].charAt(0);
       if (c !== c.toLowerCase()) b.className = 'name';
-      else if (PL[results[i]]) { b.className = 'pl'; b.title = 'Probably the plural of a noun in -wr. The book does not list plurals like this.'; }
+      else if (PL[results[i]]) { b.className = 'pl'; b.title = 'Probably the plural of a noun ending in -wr (for example gweithwyr, plural of gweithiwr). The book does not list plurals like this.'; }
       var mm = showMeanings ? meaningOf(results[i]) : null;
       if (mm) {
         var e0 = mm.entries[0];
