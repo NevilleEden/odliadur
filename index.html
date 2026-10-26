@@ -65,6 +65,7 @@
   ul.words button:hover, ul.words button:focus-visible { background: var(--chip); outline: none; }
   ul.words button.sel { background: var(--accent); color: var(--accent-fg); }
   .name { color: var(--name); font-style: italic; }
+  .pl { text-decoration: underline dotted; text-underline-offset: 3px; }
   .more { margin: 12px 0; padding: 8px 14px; border: 1px solid var(--line); background: var(--card); color: var(--fg); border-radius: 8px; }
   #detail { position: sticky; bottom: 0; background: var(--card); border: 1px solid var(--line); border-radius: 12px 12px 0 0;
             padding: 12px 14px; margin-top: 16px; box-shadow: 0 -4px 16px rgba(0,0,0,.08); display: none; max-height: 48vh; overflow: auto; }
@@ -93,6 +94,7 @@
   <div class="opts">
     <label><input type="checkbox" id="optAccents" checked> <span>Ignore accents (so <em>ydd</em> also finds <em>gwŷdd</em>)</span></label>
     <label><input type="checkbox" id="optVowel" checked> <span>Keep single vowels separate from diphthongs. If you type just <em>i</em>, leave out words ending <em>-ai</em>, <em>-ei</em> or <em>-oi</em>. If you type just <em>u</em>, leave out words ending <em>-au</em>, <em>-eu</em> or <em>-iu</em>. Untick to see every word that ends in that letter.</span></label>
+    <label><input type="checkbox" id="optPl" checked> <span>Include plurals of nouns in <em>-wr</em> (such as <em>gweithwyr</em>); the book does not list these, so they are underlined</span></label>
     <label><input type="checkbox" id="optNames" checked> <span>Include names (capitalised words, shown in italics)</span></label>
     <label><input type="checkbox" id="optMean" checked> <span>Show meanings next to each word (only about a quarter of the words have one; tap any word for more)</span></label>
     <label>Sort by
@@ -105,8 +107,10 @@
   </div>
 
   <div class="note" id="wyNote" hidden>
-    Welsh has two different <em>wy</em> sounds that do not rhyme with each other (lleddf, as in <em>mwyn</em>, and talgron, as in <em>gwyn</em>).
-    This version goes by spelling only. It keeps <em>-wy</em> apart from <em>-y</em>, but it cannot tell which sound a particular word has: some words listed here are talgron, as the book files under <em>-y</em> (for example compounds of <em>gwŷdd</em> such as <em>tanwydd</em>).
+    Welsh has two different <em>wy</em> sounds that do not rhyme with each other: lleddf (the w is a vowel, as in <em>mwyn</em>) and talgron (the w is a consonant, as in <em>gwyn</em>).
+    The book files them in different chapters (<em>-wyn</em> and <em>-yn</em>). This page follows rules worked out from the book's chapters (a vowel before the w, a circumflex on <em>wŷ</em> or <em>ŵy</em>, and a short list of exceptions),
+    but the choice depends on the word, so a few individual words may still be filed in the wrong chapter.
+    <span id="wyUnsure" hidden> For this particular ending the rules have not yet been checked against the book, so treat the split with extra caution.</span>
   </div>
 
   <div class="count" id="count" aria-live="polite"></div>
@@ -129,10 +133,10 @@
     <p>Inspired by the book <em>Yr Odliadur</em> by Roy Stephens and Alan Llwyd (ISBN 978-1-84323-903-1). This is an independent tool, not affiliated with or
     endorsed by the authors or publisher. It does not reproduce the book, and its word list differs from the book's. The list of endings follows the chapter headings of the online copy of the book by
     <a href="https://www.cs.ox.ac.uk/people/geraint.jones/rhydychen.org/gwasg.aredig/odliadur/" target="_blank" rel="noopener">Geraint Jones (Gwasg Aredig)</a>; the words under each ending come from the Bangor dictionary, not from the book.
-    The y/wy rule is by spelling only, so a few words with the talgron <em>wy</em> sound (such as <em>tanwydd</em>, <em>pinwydd</em>) appear under -wy… rather than -y…. A list of words that share an ending is not the
+    The split between the y… and wy… chapters follows rules worked out from the book's chapters and may be wrong for a few words. A list of words that share an ending is not the
     same as a list of words that rhyme in strict-metre poetry, so for the authoritative guide to rhyme, including the rules for <em>wy</em>, <em>y</em>, <em>u</em> and
     <em>i</em>, use the book.</p>
-    <p class="ver">Version 25 Oct 2026, 19:33 (UK time)</p>
+    <p class="ver">Version 26 Oct 2026, 15:30 (UK time)</p>
   </footer>
 </main>
 
@@ -163,22 +167,59 @@
     return a.length - b.length;
   }
 
-  // Does the (accent-stripped, lower-case) word t end in the ending key?
-  // Two spelling rules keep the y and wy chapters apart, as the book does:
-  //  - a w after a vowel (as in newydd, ffawydd) belongs to that vowel (aw, ew, iw, ow, uw, yw),
-  //    and a w after g (gw-, as in gwyn, gwydd) is a consonant, so these words end in -y.., not -wy..
-  //  - a w after any other consonant (mwyn, chwydd, tanwydd) is listed under -wy...
-  // Whether a particular such word has the lleddf or the talgron sound depends on the word itself and
-  // cannot be told from the spelling, so this is a rule of spelling only.
-  function accept(t, key, vowelRule) {
+  // ---- Keeping the y... and wy... chapters apart -------------------------------------------------
+  // Welsh has two different "wy" sounds: lleddf (the w is a vowel, as in mwyn, cwyn) and talgron (the w is a
+  // consonant, as in gwyn, chwyn). The book files them in different chapters (-wyn and -yn) and no spelling
+  // rule separates them completely. These rules were worked out from the chapters of the book itself,
+  // checked against several hundred words, and are followed by a short list of exceptions.
+  var VOWELS = 'aeiouwy';
+  function isV(c) { return c !== '' && VOWELS.indexOf(c) !== -1; }
+  function toks(str) { return str.match(/ch|dd|ff|ng|ll|ph|rh|th|./g) || []; }
+  function wl(str) { var o = {}; str.split(' ').forEach(function (x) { if (x) o[x] = true; }); return o; }
+  // Words the book files under the y chapter although the rules say wy
+  var Y_WORDS = wl('cedrwydd myrtwydd palmwydd pisgwydd gellygwydd llarwydd atchwyl eilchwyl chwyf ' +
+    'cardydwyn claerwyn cychwyn danwyn disgleirwyn edwyn erchwyn gorwyn llathrwyn llungwyn llwydwyn meddwyn migwyn peiswyn penwyn stalwyn sulgwyn');
+  // Words the book files under the wy chapter although the rules say y
+  var WY_WORDS = wl('diwyl gwygl grawys');
+  // Endings where the y/wy split has not yet been checked against the book
+  var UNSURE = wl('wy wyth wyt wyg wygl wym wymp wysg wystl wystr wybr wydr');
+  function wyClass(t, w, rest) {
+    var E = 'wy' + rest;
+    if (!ENDSET[E]) return 'y';                     // there is no wy chapter, so the word is under the y chapter
+    var pos = t.length - E.length, b = t.slice(0, pos);
+    if (w) {                                         // circumflex: wŷ is talgron, ŵy is lleddf (checked even when accents are ignored)
+      var o = w.normalize('NFC').toLowerCase();
+      if (o.length === t.length) {
+        if (o.charAt(pos) === 'ŵ') return 'wy';
+        if (o.charAt(pos + 1) === 'ŷ') return 'y';
+      }
+    }
+    if (Y_WORDS[t]) return 'y';
+    if (WY_WORDS[t]) return 'wy';
+    if (b === 'g' || b === 'ch') return 'y';        // the word is just gw- or chw- plus the ending (gwyn, chwyn)
+    if (b === '') return 'wy';
+    if (isV(b.charAt(b.length - 1))) return 'y';    // a vowel before the w: the w belongs to that vowel (ewyn, tywyll)
+    var bt = toks(b);
+    if (rest === 'd') return bt[bt.length - 1] === 'g' ? 'y' : 'wy';
+    if (rest === 'nt') return (b === 'p' || b === 'h' || b.slice(-1) === 'b') ? 'wy' : 'y';   // pwynt, hwynt, -bwynt
+    if (rest === 'dd') {                             // exactly one consonant after a vowel (tanwydd) is -ydd; two or more (ysgwydd) is -wydd
+      if (bt[bt.length - 1] === 'g' || /arwydd$/.test(t) || /(aw|ew|iw|ow|uw|yw|eu)rwydd$/.test(t)) return 'wy';   // digwydd, gogwydd; arwydd, cyfarwydd; distawrwydd, deheurwydd (but derwydd, herwydd are -ydd)
+      var n = 0, k = bt.length - 1;
+      while (k >= 0 && !isV(bt[k].charAt(0))) { n++; k--; }
+      return (k >= 0 && n === 1) ? 'y' : 'wy';
+    }
+    return 'wy';
+  }
+
+  // Does the (accent-stripped, lower-case) word t end in the ending key? w is the original word, used for circumflexes.
+  function accept(t, key, vowelRule, w) {
     if (t.length < key.length || t.slice(t.length - key.length) !== key) return false;
     var before = t.charAt(t.length - key.length - 1);
     var c0 = key.charAt(0);
     if (c0 === 'y' && before === 'w') {
-      var pp = t.charAt(t.length - key.length - 2);
-      if (!(pp === 'g' || 'aeiouy'.indexOf(pp) !== -1 && pp !== '')) return false;
-    } else if (key.slice(0, 2) === 'wy' && before !== '' && (before === 'g' || 'aeiouy'.indexOf(before) !== -1)) {
-      return false;
+      if (wyClass(t, w, key.slice(1)) !== 'y') return false;
+    } else if (c0 === 'w' && key.charAt(1) === 'y' && ENDSET[key]) {
+      if (wyClass(t, w, key.slice(2)) !== 'wy') return false;
     }
     if (vowelRule && t.length > 1) {
       var blockers = key === 'i' ? 'aeo' : key === 'u' ? 'aei' : '';
@@ -186,6 +227,10 @@
     }
     return true;
   }
+
+  // Plurals of nouns in -wr (gweithiwr, gweithwyr). The book does not list these, so they are marked and can be hidden.
+  var BOOK_WYR = wl('adwyr cannwyr cwyr disynnwyr gorwyr gwyr hwyr lledwyr llwyr magwyr pabwyr synnwyr trylwyr wyr awyr gwewyr');
+  var PL = {};
 
   function getJson(url) {
     return fetch(url).then(function (r) { if (!r.ok) throw new Error(url); return r.json(); });
@@ -203,6 +248,12 @@
     }
     ENDS = ENDS_TEXT.split(' ');
     ENDS.forEach(function (e) { ENDSET[e] = true; });
+    var have = {};
+    words.forEach(function (x) { have[strip(x)] = true; });
+    words.forEach(function (x) {
+      var sx = strip(x);
+      if (sx.length > 5 && sx.slice(-3) === 'wyr' && have[sx.slice(0, -3) + 'wr'] && !BOOK_WYR[sx]) PL[x] = true;
+    });
     HINT = $('chiphint').innerHTML;
     drawChips('');
     var q = (new URLSearchParams(location.search)).get('e');
@@ -217,7 +268,7 @@
     var vr = $('optVowel').checked, k = e + (vr ? '1' : '0');
     if (endCache[k] === undefined) {
       var n = 0;
-      for (var i = 0; i < words.length; i++) { if (accept(strip(words[i]), e, vr)) n++; }
+      for (var i = 0; i < words.length; i++) { if (accept(strip(words[i]), e, vr, words[i])) n++; }
       endCache[k] = n;
     }
     return endCache[k];
@@ -282,16 +333,20 @@
     var raw = $('ending').value.trim();
     if (!raw) { $('count').textContent = 'Type an ending first.'; return; }
     var ignoreAccents = $('optAccents').checked, wholeVowel = $('optVowel').checked,
-        withNames = $('optNames').checked, sort = $('optSort').value;
+        withNames = $('optNames').checked, withPl = $('optPl').checked, sort = $('optSort').value;
     chipOffset = 0; drawChips(strip(raw));
-    $('wyNote').hidden = !/^w?y/.test(strip(raw));
+    var sraw = strip(raw);
+    $('wyNote').hidden = !/^w?y/.test(sraw);
+    var chap = sraw.replace(/^w?y/, '');
+    $('wyUnsure').hidden = !(UNSURE['wy' + chap] && /^w?y/.test(sraw));
     var key = ignoreAccents ? strip(raw) : lower(raw);
     var out = [];
     for (var i = 0; i < words.length; i++) {
       if (!withNames && isName[i]) continue;
       var w = words[i];
+      if (!withPl && PL[w]) continue;
       var t = ignoreAccents ? strip(w) : lower(w);
-      if (!accept(t, key, wholeVowel)) continue;
+      if (!accept(t, key, wholeVowel, w)) continue;
       out.push(w);
     }
     if (sort === 'short') out.sort(function (a, b) { return a.length - b.length || a.localeCompare(b, 'cy'); });
@@ -314,6 +369,7 @@
       b.type = 'button'; b.dataset.w = results[i];
       var c = results[i].charAt(0);
       if (c !== c.toLowerCase()) b.className = 'name';
+      else if (PL[results[i]]) { b.className = 'pl'; b.title = 'Probably the plural of a noun in -wr. The book does not list plurals like this.'; }
       var mm = showMeanings ? meaningOf(results[i]) : null;
       if (mm) {
         var e0 = mm.entries[0];
@@ -377,7 +433,7 @@
 
   $('go').addEventListener('click', search);
   $('ending').addEventListener('keydown', function (e) { if (e.key === 'Enter') search(); });
-  ['optAccents', 'optVowel', 'optNames', 'optSort', 'optMean'].forEach(function (id) { $(id).addEventListener('change', search); });
+  ['optAccents', 'optVowel', 'optNames', 'optPl', 'optSort', 'optMean'].forEach(function (id) { $(id).addEventListener('change', search); });
   $('more').addEventListener('click', render);
 })();
 </script>
